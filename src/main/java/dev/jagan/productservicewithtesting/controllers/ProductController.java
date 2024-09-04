@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -23,7 +24,7 @@ public class ProductController {
 //    private ProductService productService2 = new FakeStoreProductService();
 
 
-    public ProductController(@Qualifier("selfProductService") ProductService productService,
+    public ProductController(@Qualifier("fakeStoreProductService") ProductService productService,
                              RestTemplate restTemplate
     ) {
         this.productService = productService;
@@ -56,7 +57,8 @@ public class ProductController {
 
     @GetMapping("/products/{id}")
     public Product getProductDetails(@PathVariable("id") Long productId) throws ProductNotFoundException {
-        return productService.getSingleProduct(productId);
+        Product response =  productService.getSingleProduct(productId);
+        return response;
     }
 
     @GetMapping("/products")
@@ -64,9 +66,17 @@ public class ProductController {
 
         List<Product> products = productService.getProducts();
 
+        List<Product> productListSample = new ArrayList<>();
+        Product extraProduct = new Product();
+        extraProduct.setPrice(250);
+        extraProduct.setTitle("pencil");
+        extraProduct.setDescription("Utility");
+
+        productListSample.add(extraProduct);
+
 //        throw new ProductNotFoundException("Bla bla bla");
 
-        ResponseEntity<List<Product>> response = new ResponseEntity<>(products, HttpStatus.OK);
+        ResponseEntity<List<Product>> response = new ResponseEntity<>(productListSample, HttpStatus.OK);
         return response;
     }
 
