@@ -1,9 +1,13 @@
 package dev.jagan.productservicewithtesting.controllers;
 
+import dev.jagan.productservicewithtesting.commons.AuthenticationCommons;
 import dev.jagan.productservicewithtesting.dtos.CreateProductRequestDto;
+import dev.jagan.productservicewithtesting.dtos.Role;
+import dev.jagan.productservicewithtesting.dtos.UserDto;
 import dev.jagan.productservicewithtesting.exceptions.ProductNotFoundException;
 import dev.jagan.productservicewithtesting.models.Product;
 import dev.jagan.productservicewithtesting.services.ProductService;
+import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,15 +24,18 @@ public class ProductController {
 
     private ProductService productService;
     private RestTemplate restTemplate;
+    private AuthenticationCommons authenticationCommons;
 
 //    private ProductService productService2 = new FakeStoreProductService();
 
 
     public ProductController(@Qualifier("fakeStoreProductService") ProductService productService,
-                             RestTemplate restTemplate
+                             RestTemplate restTemplate,
+                             AuthenticationCommons authenticationCommons
     ) {
         this.productService = productService;
         this.restTemplate = restTemplate;
+        this.authenticationCommons = authenticationCommons;
     }
 
 // private ProductService productService;
@@ -78,6 +85,37 @@ public class ProductController {
 
         ResponseEntity<List<Product>> response = new ResponseEntity<>(productListSample, HttpStatus.OK);
         return response;
+    }
+
+    // For Authentication Product
+    @GetMapping("/products/{token}")
+    public ResponseEntity<List<Product>> getAllProducts(@PathVariable("token") @NonNull String token){
+        // validate the token first
+        UserDto userDto = authenticationCommons.validateToken(token);
+
+        if (userDto == null){
+            // the token is valid, it's a forbidden request
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+
+        boolean isAdmin = false;
+        for(Role role : userDto.getRoles()){
+            if (role.getName().equals("Admin")){
+                    isAdmin = true;
+            }
+        }
+
+        if (!isAdmin){
+            // auth failed, not allowed
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        //only admins are allowed to go to this / products/
+        // handle Auth part here?
+
+        List<Product> products = productService.getProducts();
+        return new ResponseEntity<>(products, HttpStatus.ACCEPTED);
+
     }
 
     public void updateProduct() {
