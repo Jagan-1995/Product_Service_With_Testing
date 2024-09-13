@@ -71,19 +71,26 @@ public class ProductController {
     @GetMapping("/products")
     public ResponseEntity<List<Product>> getAllProducts() throws ProductNotFoundException {
 
+        // I want to call user service
+        // Client side load balancing
+        UserDto userDto = restTemplate.getForObject("http://userService/users/1" ,
+                UserDto.class);
+        // we have the user from the user service
+
+
         List<Product> products = productService.getProducts();
 
-        List<Product> productListSample = new ArrayList<>();
-        Product extraProduct = new Product();
-        extraProduct.setPrice(250);
-        extraProduct.setTitle("pencil");
-        extraProduct.setDescription("Utility");
-
-        productListSample.add(extraProduct);
+//        List<Product> productListSample = new ArrayList<>();
+//        Product extraProduct = new Product();
+//        extraProduct.setPrice(250);
+//        extraProduct.setTitle("pencil");
+//        extraProduct.setDescription("Utility");
+//
+//        productListSample.add(extraProduct);
 
 //        throw new ProductNotFoundException("Bla bla bla");
 
-        ResponseEntity<List<Product>> response = new ResponseEntity<>(productListSample, HttpStatus.OK);
+        ResponseEntity<List<Product>> response = new ResponseEntity<>(products, HttpStatus.OK);
         return response;
     }
 
